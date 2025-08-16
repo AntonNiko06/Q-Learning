@@ -50,16 +50,20 @@ class QMaze():
 
 
 class QAgent():
-    def __init__(self, maze, epsilon, slip_chance, learning_rate, discount_rate):
+    def __init__(self, maze, epsilon, min_epsilon, slip_chance, learning_rate, discount_rate, episodes):
         """Initialize an instance of the agent with the given hyperparameters"""
 
         self.maze = maze
         self.used_boni = []
 
         self.epsilon = epsilon
+        self.min_epsilon = min_epsilon
         self.slip_chance = slip_chance
         self.learning_rate = learning_rate
         self.discount_rate = discount_rate
+
+        self.episodes = episodes
+        self.cur_episode = 0
 
         self.cur_state = self.maze.start_field
 
@@ -166,6 +170,7 @@ class QAgent():
         # If the agent lands on a goal/trap field, reset its position to the start field and forget about the boni it collected
         if next_maze_field == "G" or next_maze_field == "T":
             self.cur_state = self.maze.start_field
+            self.cur_episode += 1
             self.used_boni = []
 
     def choose_action(self):
@@ -175,7 +180,10 @@ class QAgent():
         intended_action = None
         slip_action = None
 
-        if np.random.random() < 1-self.epsilon: 
+        # Decay of exploration rate over course of training to shift from exploration to exploitation behaviour
+        epsilon = max((1 - self.cur_episode / self.episodes) * self.epsilon, self.min_epsilon)
+
+        if np.random.random() < 1-epsilon: 
             # Choose best action based on highest Q-value
 
             cur_q_vals = self.q_table[self.cur_state] # get the Q-values for all actions of the current field
@@ -230,12 +238,15 @@ maze = QMaze(maze_base, goal_points=1, small_points=0.2, step_cost=-0.3)
 
 # Here you can change the hyperparameters for the training of the agent
 # epsilon: Probability of the agent to perform a random action instead of the best one he knows
+# min_epsilon: Minimum value epsilon should be able to take (important because epsilon decay is implemented)
 # slip_chance: Probability of the agent to "slip" and perform a random action instead of the one he intended to perform
 #              -> If set to 0, then the environment becomes the Gridworld environment
 #              -> If set to a value between 0 and 1, then the environment becomes the Frozen Lake environment
 # learning_rate: Governs how much the agent should learn with each update
 # discount_rate: Governs how important future rewards are during learning
-agent = QAgent(maze, epsilon=0.15, slip_chance=0.2, learning_rate=0.05, discount_rate=0.9)
+# episodes: How many full traversals the agent should be trained for
+agent = QAgent(maze, epsilon=0.15, min_epsilon=0.05, slip_chance=0.2, learning_rate=0.05, 
+               discount_rate=0.9, episodes=100)
 
 
 ####################################################################################################################
@@ -269,7 +280,7 @@ def display_maze(fps):
 
     # Stop running if pygame window is closed
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
             pygame.quit()
             exit()
 
@@ -311,21 +322,19 @@ def print_maze():
 
 ####################################################################################################################
 # ## Training
-# Finally, here you can decide for how many episodes the model should be trained and with which hyperparameters 
-# it should be trained.
+# Finally, the training loop is started. The agent will continue updating it's Q-values until it has reached a 
+# terminal state (a trap or the goal) as often as the number of episodes specified during setup.
 
-# Training
-episodes = 10000
-for i in range(episodes):
+# You can stop training at any time by pressing any key on the keyboard.
+
+# Training - stopped by pressing any key
+while agent.cur_episode < agent.episodes:
     # Chooses an action for current state, adjusts Q-values, then performs that action
     agent.update_q_table()
 
     # Display maze using pygame
-    if i < 3800:
-        display_maze(fps=1000)
-    else:
-        display_maze(fps=5)
-
+    display_maze(fps=60)
+    
     # Display maze using terminal (does not work in jupyter notebook)
     # print_maze()
 
