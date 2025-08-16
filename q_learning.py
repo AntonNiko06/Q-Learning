@@ -218,10 +218,10 @@ class QAgent():
 # Note: all rows should be the same size and all columns should be the same size, but row and column counts 
 # do not have to match. Don't use any characters besides the ones above (also don't use whitespaces)
 maze_base = """
-ooo+ooo
-ooooooo
-SoTTToo
-ooooooG
+oo+ooo
+oooooo
+SoTToo
+WooooG
 """[1:-1]
 
 # Here you can assign the rewards/punishments for landing on certain fields
@@ -255,13 +255,13 @@ pygame.display.set_caption("Q-Learning Maze")
 
 # Color mapping for pygame maze display
 colors = {
-    "S": (0, 120, 255),     # Start - Bright Blue  
-    "W": (60, 60, 60),      # Wall - Dark Gray  
-    "G": (0, 200, 0),       # Goal - Vivid Green  
-    "T": (180, 90, 200),    # Teleport or special tile - Purple  
-    "o": (220, 220, 220),   # Empty - Light Gray  
-    "+": (255, 165, 0),     # Bonus - Orange  
-    "-": (200, 0, 0)        # Trap - Deep Red  
+    "S": (0, 120, 255), # Start
+    "W": (60, 60, 60), # Wall
+    "G": (0, 200, 0), # Goal
+    "T": (200, 0, 0), # Trap
+    "o": (220, 220, 220), # Empty
+    "+": (195, 217, 50), # + Bonus 
+    "-": (217, 100, 50) # - Bonus
 }
 
 def display_maze(fps):
@@ -315,13 +315,16 @@ def print_maze():
 # it should be trained.
 
 # Training
-episodes = 4000
+episodes = 10000
 for i in range(episodes):
     # Chooses an action for current state, adjusts Q-values, then performs that action
     agent.update_q_table()
 
     # Display maze using pygame
-    display_maze(fps=60)
+    if i < 3800:
+        display_maze(fps=1000)
+    else:
+        display_maze(fps=5)
 
     # Display maze using terminal (does not work in jupyter notebook)
     # print_maze()
