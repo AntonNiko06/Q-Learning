@@ -335,7 +335,7 @@ while agent.cur_episode < agent.episodes:
     # Display maze using pygame
     display_maze(fps=60)
     
-    # Display maze using terminal (does not work in jupyter notebook)
+    # Display maze using terminal
     # print_maze()
 
 pygame.quit()
