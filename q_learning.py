@@ -13,11 +13,11 @@ np.set_printoptions(suppress=True, precision=4)
 
 ####################################################################################################################
 # ## Q-Learning Implementation
-# Below, two seperate classes are created; one for the maze and one for the agent. The maze class stores all 
+# Below, we implement two separate classes; one for the maze and one for the agent. The maze class stores all 
 # information relevant to the layout of the maze, such as column/row count, while the agent class implements 
 # the required functions for learning to navigate the maze, such as the Q-function.
 class QMaze():
-    def __init__(self, maze_base, goal_points, small_points, step_cost):
+    def __init__(self, maze_base:str, goal_points:float, small_points:float, step_cost:float):
         """Initialize the maze using the given maze layout"""
 
         self.maze_base = maze_base
@@ -50,7 +50,8 @@ class QMaze():
 
 
 class QAgent():
-    def __init__(self, maze, epsilon, min_epsilon, slip_chance, learning_rate, discount_rate, episodes):
+    def __init__(self, maze:QMaze, epsilon:float, min_epsilon:float, slip_chance:float, learning_rate:float, 
+                 discount_rate:float, episodes:int):
         """Initialize an instance of the agent with the given hyperparameters"""
 
         self.maze = maze
@@ -70,7 +71,7 @@ class QAgent():
         self.q_table = None
         self.construct_q_table(method="zeros")
 
-    def construct_q_table(self, method="zeros"):
+    def construct_q_table(self, method:str="zeros"):
         """Initializes the Q-table with 4 values for each field corresponding to left, down, right, up"""
 
         if method == "zeros":
@@ -108,7 +109,7 @@ class QAgent():
         # Update the state to perform the action
         self.update_state(new_state)
 
-    def action_possible(self, action):
+    def action_possible(self, action:int) -> bool:
         """Determine if a given action is possible from current state"""
 
         new_state = self.get_new_state(action)
@@ -139,7 +140,7 @@ class QAgent():
 
         return np.array(pos_actions)
 
-    def get_new_state(self, action):
+    def get_new_state(self, action:int) -> int:
         """Get the state (i.e. field) the agent will be in after performing a given action"""
 
         if action == 0: # Move left
@@ -155,7 +156,7 @@ class QAgent():
 
         return new_state
 
-    def update_state(self, new_state):
+    def update_state(self, new_state:int):
         """Update the current state (i.e. the agents position) based on the new state"""
 
         # Update state
@@ -163,24 +164,24 @@ class QAgent():
 
         next_maze_field = self.maze.maze[new_state]
 
-        # If the agent lands on a bonus field, keep track of it until the end of the episode in order to prevent using bonus multiple times
+        # Keep track of collected boni until the end of the episode in order to prevent using bonus multiple times
         if next_maze_field == "+" or next_maze_field == "-":
             self.used_boni.append(new_state)
 
-        # If the agent lands on a goal/trap field, reset its position to the start field and forget about the boni it collected
+        # If the agent lands on a goal/trap field, reset its position to the start field and forget about the collected boni
         if next_maze_field == "G" or next_maze_field == "T":
             self.cur_state = self.maze.start_field
             self.cur_episode += 1
             self.used_boni = []
 
-    def choose_action(self):
+    def choose_action(self) -> int:
         """Choose action using epsilon-greedy policy and incorporate slip chance"""
 
         pos_actions = self.get_possible_actions()
         intended_action = None
         slip_action = None
 
-        # Decay of exploration rate over course of training to shift from exploration to exploitation behaviour
+        # Decay of exploration rate over course of training to shift from exploration to exploitation behaviour later
         epsilon = max((1 - self.cur_episode / self.episodes) * self.epsilon, self.min_epsilon)
 
         if np.random.random() < 1-epsilon: 
@@ -251,8 +252,8 @@ agent = QAgent(maze, epsilon=0.15, min_epsilon=0.05, slip_chance=0.2, learning_r
 
 ####################################################################################################################
 # ### Visualization
-# Here we implement two ways of visualizing the agent traversing the maze, one using pygame and one using just 
-# the terminal.
+# Here two ways of visualizing the agent traversing the maze are implemented, one using pygame and one using 
+# just the terminal.
 
 # #### Pygame
 # Initialize pygame window
@@ -275,7 +276,7 @@ colors = {
     "-": (217, 100, 50) # - Bonus
 }
 
-def display_maze(fps):
+def display_maze(fps:int):
     """Display maze using pygame"""
 
     # Stop running if pygame window is closed
